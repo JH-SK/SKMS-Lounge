@@ -510,7 +510,31 @@ const DB = {
   async delIdea(id) { localSave(); if (REMOTE) return remoteTry(() => sb.from('ideas').delete().eq('id', id).then(r => { if (r.error) throw r.error; })); return true; },
   async comment(c) { localSave(); if (REMOTE) return remoteTry(() => sb.from('comments').insert({ id: c.id, campaign: C, uid: c.uid, idea_id: c.ideaId, kind: c.kind || 'comment', body: c.body, at: new Date(c.at).toISOString() }).then(r => { if (r.error) throw r.error; })); return true; },
   async delComment(id) { localSave(); if (REMOTE) return remoteTry(() => sb.from('comments').delete().eq('id', id).then(r => { if (r.error) throw r.error; })); return true; },
-  async like(tid, uid, on) { localSave(); if (REMOTE) return remoteTry(() => (on ? sb.from('likes').insert({ tid, uid, campaign: C }) : sb.from('likes').delete().eq('tid', tid).eq('uid', uid)).then(r => { if (r.error && r.error.code !== '23505') throw r.error; })); return true; }
+  async like(tid, uid, on) { localSave(); if (REMOTE) return remoteTry(() => (on ? sb.from('likes').insert({ tid, uid, campaign: C }) : sb.from('likes').delete().eq('tid', tid).eq('uid', uid)).then(r => { if (r.error && r.error.code !== '23505') throw r.error; })); return true; },
+  
+  // 설정 및 문항 저장 기능
+  async saveSettings() {
+    localSave();
+    if (REMOTE) return remoteTry(() => sb.from('settings').upsert({ id: C, data: S.settings }).then(r => { if (r.error) throw r.error; }));
+    return true;
+  },
+
+  // 데이터 전체 초기화 기능
+  async resetData() {
+    S.votes = []; S.sentences = []; S.ideas = []; S.comments = []; S.likes = []; S.users = [];
+    localSave();
+    if (REMOTE) {
+      return remoteTry(async () => {
+        await sb.from('votes').delete().eq('campaign', C);
+        await sb.from('sentences').delete().eq('campaign', C);
+        await sb.from('ideas').delete().eq('campaign', C);
+        await sb.from('comments').delete().eq('campaign', C);
+        await sb.from('likes').delete().eq('campaign', C);
+        await sb.from('users').delete().eq('campaign', C);
+      });
+    }
+    return true;
+  }
 };
 
 const $ = (s, el) => (el || document).querySelector(s);
@@ -1268,11 +1292,11 @@ function renderAdmin(app) {
   if (!adminOK) {
     app.innerHTML = `<div class="step"><button class="back" id="back" type="button">메인으로</button>
       <h1 style="margin-top:14px">관리자 접근</h1>
-      <div class="field" style="margin-top:24px"><label for="pin">관리자 코드</label><input id="pin" type="password" autocomplete="off" placeholder="${REMOTE ? '' : '미리보기 코드: skms2026'}"></div>
+      <div class="field" style="margin-top:24px"><label for="pin">관리자 코드</label><input id="pin" type="password" autocomplete="off"></div>
       <div style="margin-top:14px"><button class="btn" id="pinOk" type="button">확인</button></div></div>`;
     $('#back').onclick = () => go({ name: 'home' });
     
-  const ok = async () => {
+    const ok = async () => {
       const pin = $('#pin').value;
       if (pin === LOCAL_PIN) {
         adminOK = true;
@@ -1298,7 +1322,7 @@ function renderAdmin(app) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const days = [...Array(14)].map((_, i) => { const d = new Date(today); d.setDate(d.getDate() - 13 + i); const s = d.getTime(), e = s + 86400000; return { d, n: new Set((S.votes || []).filter(v => v.at >= s && v.at < e).map(v => v.uid)).size }; });
   const maxD = Math.max(...days.map(x => x.n), 1);
-  const tabs = [['status', '현황'], ['agendas', '생각거리'], ['data', '데이터']];
+  const tabs = [['status', '현황'], ['agendas', '생각거리 관리'], ['data', '데이터 관리']];
   
   let body = '';
   if (tab === 'status') {
@@ -1312,10 +1336,61 @@ function renderAdmin(app) {
       <div class="spark">${days.map((x, i) => `<i style="height:${Math.max(3, x.n / maxD * 100)}%" class="${i === 13 ? 'today' : ''}" title="${x.d.getMonth() + 1}.${x.d.getDate()} ·${x.n}명"></i>`).join('')}</div>
       <div class="sparkl"><span>${days[0].d.getMonth() + 1}.${days[0].d.getDate()}</span><span>오늘</span></div></div>`;
   } else if (tab === 'agendas') {
-    body = `<div class="card"><h3>생각거리 관리</h3>
-      ${agendas().map((a, i) => `<div class="row"><div style="flex:1"><b>${esc(a.statement)}</b></div><div><button type="button" class="btn xs sub" data-edit="${a.id}">수정</button></div></div>`).join('')}</div>`;
+    const editingId = view.editingAgendaId;
+    const editingAgenda = agendas().find(a => a.id === editingId) || (editingId === 'new' ? { id: 'a_' + Date.now().toString(36), tag: '', statement: '', context: '', prompt: '', fill: '', active: true } : null);
+
+    if (editingAgenda) {
+      body = `<div class="card">
+        <h3>${editingId === 'new' ? '새 생각거리 추가' : '생각거리 상세 수정'}</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+          <div class="field"><label>1. 태그 (분류)</label><input id="edTag" value="${esc(editingAgenda.tag)}" placeholder="예: 표현, 행복, AI 시대"></div>
+          <div class="field"><label>2. 질문 문항 (statement)</label><textarea id="edStatement" rows="2" placeholder="질문 내용을 입력하세요">${esc(editingAgenda.statement)}</textarea></div>
+          <div class="field"><label>3. 배경 설명 (context)</label><textarea id="edContext" rows="2" placeholder="질문 하단에 표시될 설명글">${esc(editingAgenda.context)}</textarea></div>
+          <div class="field"><label>4. 한 줄 작성 유도 문구 (prompt)</label><input id="edPrompt" value="${esc(editingAgenda.prompt)}" placeholder="예: 내가 생각하는 SUPEX는"></div>
+          <div class="field"><label>5. 빈칸 양식 (fill)</label><input id="edFill" value="${esc(editingAgenda.fill)}" placeholder="예: SKMS는 ___ (___ 표시 자리에 입력창이 생깁니다)"></div>
+          <div class="field"><label>6. 노출 상태</label>
+            <select id="edActive">
+              <option value="true" ${editingAgenda.active ? 'selected' : ''}>공개 (설문 화면에 보임)</option>
+              <option value="false" ${!editingAgenda.active ? 'selected' : ''}>비공개 (숨김)</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn sm" id="saveAgendaBtn" type="button">저장하기</button>
+            <button class="btn sm sub" id="cancelAgendaBtn" type="button">취소</button>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      body = `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3>생각거리 목록 (${agendas().length}개)</h3>
+          <button class="btn xs" id="addAgendaBtn" type="button">+ 새 생각거리 추가</button>
+        </div>
+        ${agendas().map((a, i) => `
+          <div class="row" style="align-items:flex-start">
+            <div style="flex:1">
+              <span class="tiny" style="color:${a.active ? 'var(--blue)' : 'var(--ink-4)'};font-weight:700">[${esc(a.tag)}]${a.active ? '공개' : '숨김'}</span>
+              <b style="display:block;margin-top:2px">${i + 1}.${esc(a.statement)}</b>
+              <p class="tiny" style="margin-top:4px;color:var(--ink-2)">${esc(a.context || '배경설명 없음')}</p>
+            </div>
+            <div style="display:flex;gap:4px">
+              <button type="button" class="btn xs sub" data-editag="${a.id}">수정</button>
+              <button type="button" class="btn xs sub" data-delag="${a.id}" style="color:var(--disagree)">삭제</button>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    }
   } else {
-    body = `<div class="card"><h3>데이터 내보내기</h3><button class="btn sm" id="csvDl" type="button">CSV 다운로드</button></div>`;
+    body = `<div class="card">
+      <h3>데이터 내보내기</h3>
+      <p class="tiny" style="margin:6px 0 12px;color:var(--ink-2)">수집된 모든 응답과 작성된 의견 데이터를 CSV 파일로 다운로드합니다.</p>
+      <button class="btn sm" id="csvDl" type="button">CSV 다운로드</button>
+    </div>
+    <div class="card" style="margin-top:16px;border:1px solid #FFD4D0;background:#FFF6F5">
+      <h3 style="color:#D04331">⚠️ 위험 구역: 응답 데이터 초기화</h3>
+      <p class="tiny" style="margin:6px 0 12px;color:#8A2015">지금까지 수집된 모든 투표 결과, 한 줄 소견, 아이디어, 댓글, 사용자 데이터를 완전히 삭제합니다. 이 작업은 복구할 수 없습니다.</p>
+      <button class="btn sm" id="resetDataBtn" type="button" style="background:#EB5A47;color:#fff">전체 데이터 초기화하기</button>
+    </div>`;
   }
   
   app.innerHTML = `<div class="step"><button class="back" id="back" type="button">메인으로</button>
@@ -1323,10 +1398,71 @@ function renderAdmin(app) {
     <div class="atabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-at="${k}" aria-selected="${tab === k}">${l}</button>`).join('')}</div>
     ${body}</div>`;
     
-  $('#back').onclick = () => go({ name: 'home' });
-  $$('[data-at]').forEach(b => b.onclick = () => { view.atab = b.dataset.at; render(); });
+  $('#back').onclick = () => go({ name: 'home' });   $$('[data-at]').forEach(b => b.onclick = () => { view.atab = b.dataset.at; view.editingAgendaId = null; render(); });
+  
+  // 생각거리 관리 이벤트
+  const addBtn = $('#addAgendaBtn');
+  if (addBtn) addBtn.onclick = () => { view.editingAgendaId = 'new'; render(); };
+  
+  $$('[data-editag]').forEach(b => b.onclick = () => { view.editingAgendaId = b.dataset.editag; render(); });$$
+('[data-delag]').forEach(b => b.onclick = async () => {
+    if (!confirm('이 생각거리를 삭제하시겠습니까?')) return;
+    const aid = b.dataset.delag;
+    S.settings.agendas = S.settings.agendas.filter(a => a.id !== aid);
+    toast('생각거리가 삭제되었습니다.');
+    render();
+    await DB.saveSettings();
+  });
+  
+  const saveAg = $('#saveAgendaBtn');
+  if (saveAg) {
+    saveAg.onclick = async () => {
+      const tag = $('#edTag').value.trim();
+      const statement = $('#edStatement').value.trim();
+      const context = $('#edContext').value.trim();
+      const prompt = $('#edPrompt').value.trim();
+      const fill = $('#edFill').value.trim();
+      const active = $('#edActive').value === 'true';
+
+      if (!statement) { toast('질문 문항을 입력해 주세요.'); return; }
+
+      let agendasList = S.settings.agendas || [];
+      const editingId = view.editingAgendaId;
+      if (editingId === 'new') {
+        agendasList.push({ id: 'a_' + Date.now().toString(36), tag, statement, context, prompt, fill, active });
+      } else {
+        const item = agendasList.find(a => a.id === editingId);
+        if (item) Object.assign(item, { tag, statement, context, prompt, fill, active });
+      }
+      S.settings.agendas = agendasList;
+      view.editingAgendaId = null;
+      toast('저장되었습니다.');
+      render();
+      await DB.saveSettings();
+    };
+  }
+  const cancelAg = $('#cancelAgendaBtn');
+  if (cancelAg) cancelAg.onclick = () => { view.editingAgendaId = null; render(); };
+
+  // 데이터 관리 이벤트 (CSV 다운로드 및 초기화)
   const dl = $('#csvDl'); 
   if (dl) dl.onclick = async () => { const text = await buildExport(); downloadText('skms_export.csv', text); };
+
+  const resetBtn = $('#resetDataBtn');
+  if (resetBtn) {
+    resetBtn.onclick = async () => {
+      const firstCheck = confirm('정말로 모든 응답 데이터를 초기화하시겠습니까?\n수집된 모든 참가자, 답변, 작성글 데이터가 완전 삭제됩니다.');
+      if (!firstCheck) return;
+      const secondCheck = confirm('삭제된 데이터는 절대 복구할 수 없습니다. 계속 진행하시겠습니까?');
+      if (!secondCheck) return;
+
+      resetBtn.disabled = true;
+      resetBtn.textContent = '초기화 처리 중…';
+      await DB.resetData();
+      toast('모든 데이터가 초기화되었습니다.');
+      render();
+    };
+  }
 }
 
 const modeTag = $('#modeTag'); if (modeTag) modeTag.hidden = REMOTE;
