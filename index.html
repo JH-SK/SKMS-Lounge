@@ -676,7 +676,7 @@ function renderGate(app) {
     app.innerHTML = `<div class="step" style="padding-top:36px">
       <p class="tiny" style="color:var(--blue);font-weight:700">${esc((S && S.settings && S.settings.name) || 'SKMS Lounge')}</p>
       <h1 style="margin-top:6px">SKMS에 대해<br>어떻게 생각하세요?</h1>
-      <p class="muted" style="margin-top:12px;font-size:1.02rem">열 가지 생각거리에 답하고, 나만의 SKMS 한 줄을 남겨 주세요. 구성원 전체의 생각은 답한 뒤 바로 볼 수 있어요.</p>
+      <p class="muted" style="margin-top:12px;font-size:1.02rem">SKMS 생각을 답하고, 나만의 SKMS 한 줄을 남겨 주세요. 구성원 전체의 생각은 답한 뒤 바로 볼 수 있어요.</p>
       ${(S && S.settings && S.settings.notice) ? `<div class="banner">${esc(S.settings.notice)}</div>` : ''}
       <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
         <div class="field"><label for="gName">이름</label><input id="gName" value="${esc(gate.name)}" placeholder="홍길동" maxlength="20" autocomplete="name"></div>
