@@ -828,16 +828,18 @@ function renderHome(app) {
 function renderDetail(app) {
   const a = agendaById(view.aid);
   if (!a) { go({ name: 'home' }); return; }
-  
+
   const isFinal = a.id === 'final';
   const v = isFinal ? null : myVote(a.id);
   const list = orderedAgendas();
   const idx = list.findIndex(x => x.id === a.id);
   const closed = isClosed();
 
+  // "어떻게 생각하세요?"(ask) 화면에만 글자 없는 '←' 화살표 버튼 생성
+  const backBtn = view.phase === 'ask' ? '<button class="back" id="back" type="button" aria-label="뒤로가기"></button>' : '';
   const head = isFinal 
-    ? `<button class="back" id="back" type="button">홈</button><p class="d-ctx">종합 정리</p>`
-    : `<button class="back" id="back" type="button">홈</button><p class="d-ctx">${esc(a.tag)} · ${idx + 1}/${list.length}</p><div class="d-st">“${esc(a.statement)}”</div><p class="d-ctx">${esc(a.context)}</p>`;
+    ? `${backBtn}<p class="d-ctx">종합 정리</p>`
+    : `${backBtn}<p class="d-ctx">${esc(a.tag)} · ${idx + 1}/${list.length}</p><div class="d-st">“${esc(a.statement)}”</div><p class="d-ctx">${esc(a.context)}</p>`;
 
   if (view.phase === 'ask') {
     app.innerHTML = `<div class="step">${head}
@@ -847,8 +849,8 @@ function renderDetail(app) {
       ${v ? `<div style="margin-top:16px"><button class="btn sub" id="toRes" type="button">결과만 보기</button></div>` : ''}
     </div>`;
     
-    $('#back').onclick = () => go({ name: 'home' });
-    $$('.stance').forEach(b => b.onclick = () => { view.stance = b.dataset.s; view.phase = 'why'; render(); });
+    // 화살표 클릭 시 홈 화면으로 즉시 이동
+    const bk = $('#back'); if (bk) bk.onclick = () => go({ name: 'home' });     $$('.stance').forEach(b => b.onclick = () => { view.stance = b.dataset.s; view.phase = 'why'; render(); });
     const tr = $('#toRes'); if (tr) tr.onclick = () => { view.phase = 'result'; render(); };
 
   } else if (view.phase === 'why') {
@@ -916,7 +918,6 @@ function renderDetail(app) {
       done();
       await DB.sentence(rec);
     };
-    const bk = $('#back'); if (bk) bk.onclick = () => go({ name: 'home' });
 
   } else {
     const t = tally(a.id);
@@ -938,9 +939,8 @@ function renderDetail(app) {
     </div>
     <div class="cta"><div class="in">${nextAg ? `<button class="btn" id="next" type="button">다음 생각거리 →</button>` : `<button class="btn" id="next" type="button">종합 한 줄 남기기</button>`}</div></div>`;
 
-    const bk = $('#back'); if (bk) bk.onclick = () => go({ name: 'home' });
-    $$('.tabs [role=tab]').forEach(b => b.onclick = () => { view.tab = b.dataset.t; render(); });
-    $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
+    $$('.tabs [role=tab]').forEach(b => b.onclick = () => { view.tab = b.dataset.t; render(); });$$
+('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
     const c = $('#change'); if (c) c.onclick = () => { view.phase = 'ask'; view.tab = null; render(); };
     const nx = $('#next'); if (nx) nx.onclick = () => nextAg ? go({ name: 'detail', aid: nextAg.id, phase: 'ask' }) : go({ name: 'detail', aid: 'final', phase: 'line' });
   }
