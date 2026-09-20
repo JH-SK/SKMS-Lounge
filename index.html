@@ -290,7 +290,6 @@ header.top .in { max-width: var(--w); margin: 0 auto; padding: 12px 20px; displa
       <button class="top-my-btn" id="navMyTop" type="button">My</button>
     </div>
     <div style="display:flex;gap:2px;align-items:center">
-      <button class="hbtn" id="navAdmin" hidden type="button">관리</button>
       <button class="hbtn" id="navOut" hidden type="button">나가기</button>
     </div>
   </div>
@@ -649,7 +648,6 @@ function render() {
 
 const bnavEl = $('#bnav'); if (bnavEl) bnavEl.onclick = e => { const b = e.target.closest('[data-go]'); if (b) go({ name: b.dataset.go }); };
 const myTopBtn = $('#navMyTop'); if (myTopBtn) myTopBtn.onclick = () => go({ name: 'me' });
-const adminBtn = $('#navAdmin'); if (adminBtn) adminBtn.onclick = () => go({ name: 'admin' });
 const brandBtn = $('.brand'); if (brandBtn) { brandBtn.style.cursor = 'pointer'; brandBtn.onclick = () => go({ name: 'home' }); }
 const outBtn = $('#navOut'); 
 if (outBtn) {
@@ -814,13 +812,13 @@ function renderHome(app) {
     <div class="hero">
       ${C !== 'main' || (S && S.settings && S.settings.name !== 'SKMS Lounge') ? `<p class="tiny" style="color:var(--blue);font-weight:700;margin-bottom:6px">${esc((S && S.settings && S.settings.name))}</p>` : ''}
       <h1>${first ? `${esc(me.name)}님, 어떤 생각이<br>가장 먼저 눈에 들어오세요?` : !all ? `${esc(me.name)}님, ${list.length}개 중<br>${done}개에 답하셨어요` : `${esc(me.name)}님,<br>모두 답하셨어요. 고마워요.`}</h1>
-      <p>${first ? '궁금한 것부터 눌러 보세요. 순서는 상관없어요.' : !all ? '남은 것도 한 번 눌러 보세요.' : fin ? '생각이 바뀌면 언제든 다시 눌러 바꿀 수 있어요.' : '마지막으로, 종합해서 한 줄만 남겨 주세요.'}</p>
+      <p>${first ? '궁금한 것부터 눌러 보세요. 순서는 상관없어요.' : !all ? '남은 문항도 의견을 남겨주세요.' : fin ? '생각이 바뀌면 언제든 다시 눌러 바꿀 수 있어요.' : '마지막으로, 종합해서 한 줄만 남겨 주세요.'}</p>
       <div class="prog" aria-label="진행률"><i style="width:${pct(done, list.length)}%"></i></div>
     </div>
     ${(S && S.settings && S.settings.notice) ? `<div class="banner" style="margin:0 0 14px">${esc(S.settings.notice)}</div>` : ''}
     ${isClosed() ? `<div class="banner" style="margin:0 0 14px">참여가 마감됐어요. 결과는 계속 볼 수 있어요.</div>` : ''}
     ${demoN ? `<p class="tiny" style="margin:-4px 0 10px">지금 보이는 숫자는 화면 확인용 예시 응답 ${demoN}명분이에요.</p>` : ''}
-    ${!list.length ? '<div class="empty">아직 게시된 생각거리가 없어요.</div>' : ''}
+    ${!list.length ? '<div class="empty">아직 게시된 생각거리의 없어요.</div>' : ''}
     <div class="agendas">
       ${list.map(a => {
         const v = myVote(a.id);
@@ -864,7 +862,8 @@ function renderDetail(app) {
       ${v ? `<div style="margin-top:16px"><button class="btn sub" id="toRes" type="button">결과만 보기</button></div>` : ''}
     </div>`;
     
-    const bk = $('#back'); if (bk) bk.onclick = () => goBack();     $$('.stance').forEach(b => b.onclick = () => { go({ name: 'detail', aid: a.id, phase: 'why', stance: b.dataset.s }); });
+    const bk = $('#back'); if (bk) bk.onclick = () => goBack();
+    $$('.stance').forEach(b => b.onclick = () => { go({ name: 'detail', aid: a.id, phase: 'why', stance: b.dataset.s }); });
     const tr = $('#toRes'); if (tr) tr.onclick = () => { go({ name: 'detail', aid: a.id, phase: 'result' }); };
 
   } else if (view.phase === 'why') {
@@ -956,8 +955,8 @@ function renderDetail(app) {
     <div class="cta"><div class="in">${nextAg ? `<button class="btn" id="next" type="button">다음 생각거리 →</button>` : `<button class="btn" id="next" type="button">종합 한 줄 남기기</button>`}</div></div>`;
 
     const bk = $('#back'); if (bk) bk.onclick = () => goBack();
-    $$('.tabs [role=tab]').forEach(b => b.onclick = () => { view.tab = b.dataset.t; render(); });$$
-('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
+    $$('.tabs [role=tab]').forEach(b => b.onclick = () => { view.tab = b.dataset.t; render(); });
+    $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
     const c = $('#change'); if (c) c.onclick = () => { go({ name: 'detail', aid: a.id, phase: 'ask', tab: null }); };
     const nx = $('#next'); if (nx) nx.onclick = () => nextAg ? go({ name: 'detail', aid: nextAg.id, phase: 'ask' }) : go({ name: 'detail', aid: 'final', phase: 'line' });
   }
@@ -1023,8 +1022,8 @@ function renderOurs(app) {
     </section>
   </div>`;
   
-  $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));$$
-('[data-delsent]').forEach(b => b.onclick = async () => {
+  $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
+  $$('[data-delsent]').forEach(b => b.onclick = async () => {
     if (!confirm('작성하신 한 줄 의견을 삭제하시겠습니까?')) return;
     const id = b.dataset.delsent;
     S.sentences = S.sentences.filter(s => s.id !== id);
@@ -1067,8 +1066,16 @@ function renderERRC(app) {
   </div>`;
 
   $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
-  $$('[data-delsent]').forEach(b => b.onclick = async () => {     if (!confirm('작성하신 제안을 삭제하시겠습니까?')) return;     const id = b.dataset.delsent;     S.sentences = S.sentences.filter(s => s.id !== id);     S.likes = S.likes.filter(l => l.tid !== id);     toast('삭제되었습니다.');     render();     await DB.delSentence(id);   });   $$
-('[data-errcsubmit]').forEach(b => b.onclick = async () => {
+  $$('[data-delsent]').forEach(b => b.onclick = async () => {
+    if (!confirm('작성하신 제안을 삭제하시겠습니까?')) return;
+    const id = b.dataset.delsent;
+    S.sentences = S.sentences.filter(s => s.id !== id);
+    S.likes = S.likes.filter(l => l.tid !== id);
+    toast('삭제되었습니다.');
+    render();
+    await DB.delSentence(id);
+  });
+  $$('[data-errcsubmit]').forEach(b => b.onclick = async () => {
     const aid = b.dataset.errcsubmit;
     const ta = $('#input_' + aid);
     const body = ta ? ta.value.trim() : '';
@@ -1160,7 +1167,6 @@ function renderIdeas(app) {
   if (nw) {
     nw.onclick = () => {
       view.compose = true; 
-      // 이 부분이 깨졌던 || 연산자입니다. 안전하게 처리했습니다.
       view.ctopic = cur || topics[0]?.id; 
       render(); 
       setTimeout(() => $('#ideaBody')?.focus(), 60); 
@@ -1236,9 +1242,7 @@ function renderIdeaDetail(app) {
     ${cmts.length ? `<div class="rlist">${cmts.map(replyHtml).join('')}</div>` : '<div class="empty" style="padding:16px">첫 댓글을 남겨 보세요.</div>'}`}
   </div>`;
   
-  const bk = $('#back'); if (bk) bk.onclick = () => go({ name: 'ideas' });
-  $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
-  $$('[data-rk]').forEach(b => b.onclick = () => { view.rkind = b.dataset.rk; render(); setTimeout(() => $('#replyBody')?.focus(), 50); });
+  const bk = $('#back'); if (bk) bk.onclick = () => go({ name: 'ideas' });   $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));$$('[data-rk]').forEach(b => b.onclick = () => { view.rkind = b.dataset.rk; render(); setTimeout(() =>$('#replyBody')?.focus(), 50); });
   
   const rb = $('#replyBody');
   if (rb) { 
@@ -1261,8 +1265,8 @@ function renderIdeaDetail(app) {
     };
   }
   
-  $$('[data-delc]').forEach(b => b.onclick = async () => { const id = b.dataset.delc; S.comments = S.comments.filter(c => c.id !== id); S.likes = S.likes.filter(l => l.tid !== id); render(); await DB.delComment(id); });
-  $$('[data-hidec]').forEach(b => b.onclick = async () => { const c = S.comments.find(x => x.id === b.dataset.hidec); if (c) { c.hidden = true; localSave(); render(); if (REMOTE) await remoteTry(() => DB.admin('hide', { kind: 'comment', id: c.id, hidden: true })); } });
+  $$('[data-delc]').forEach(b => b.onclick = async () => { const id = b.dataset.delc; S.comments = S.comments.filter(c => c.id !== id); S.likes = S.likes.filter(l => l.tid !== id); render(); await DB.delComment(id); });$$
+('[data-hidec]').forEach(b => b.onclick = async () => { const c = S.comments.find(x => x.id === b.dataset.hidec); if (c) { c.hidden = true; localSave(); render(); if (REMOTE) await remoteTry(() => DB.admin('hide', { kind: 'comment', id: c.id, hidden: true })); } });
   
   const es = $('#editStart'); if (es) es.onclick = () => { view.editIdea = i.id; render(); };
   const ec = $('#editCancel'); if (ec) ec.onclick = () => { view.editIdea = null; render(); };
@@ -1284,10 +1288,15 @@ function renderMe(app) {
     <div class="sec"><h2>내 답변</h2><span class="tiny">탭하면 변경 가능</span></div>
     ${list.map(a => { const v = myVote(a.id); return `<button type="button" class="merow" data-a="${a.id}" style="width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line)"><div><div class="s">${esc(a.statement)}</div>${v && v.reason ? `<div class="r">${esc(v.reason)}</div>` : ''}</div><span class="mk" style="color:${v ? (v.stance === 'agree' ? 'var(--agree)' : v.stance === 'disagree' ? 'var(--disagree)' : 'var(--ink-2)') : 'var(--ink-4)'}">${v ? SLABEL[v.stance] : '아직'}</span></button>`; }).join('')}
     ${mySentence('final') ? `<div class="mine-box" style="margin-top:18px"><div class="k">종합 한 줄</div><p>${esc(mySentence('final').body)}</p><div class="x"><button type="button" class="btn xs sub" id="editFinal">고치기</button></div></div>` : ''}
+    <!-- 맨 바닥 은밀한 관리자 진입 버튼 -->
+    <div style="margin-top:40px;padding-bottom:20px;text-align:center">
+      <button type="button" id="secretAdminBtn" style="background:none;border:none;color:var(--ink-4);font-size:11px;cursor:pointer">ⓒ SKMS Lounge</button>
+    </div>
   </div>`;
   
   $$('.merow').forEach(b => b.onclick = () => go({ name: 'detail', aid: b.dataset.a, phase: myVote(b.dataset.a) ? 'result' : 'ask' }));
   const ef = $('#editFinal'); if (ef) ef.onclick = () => go({ name: 'detail', aid: 'final', phase: 'line' });
+  const sab = $('#secretAdminBtn'); if (sab) sab.onclick = () => go({ name: 'admin' });
 }
 
 function csvText(rows) { const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"'; return rows.map(r => r.map(q).join(',')).join('\n'); }
