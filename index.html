@@ -756,13 +756,7 @@ function renderGate(app) {
         me = u;
         try { localStorage.setItem(KEYC + '_me', JSON.stringify(me)); } catch (e) {}
         
-        const ok = await DB.user(u);
-        if (!ok && REMOTE) {
-          me = null;
-          S.users = S.users.filter(x => x !== u);
-          gn.disabled = false; gn.textContent = '시작하기';
-          return;
-        }
+        DB.user(u);
         go({ name: 'home' });
       };
     }
