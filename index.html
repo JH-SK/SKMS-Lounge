@@ -812,7 +812,7 @@ function renderHome(app) {
     <div class="hero">
       ${C !== 'main' || (S && S.settings && S.settings.name !== 'SKMS Lounge') ? `<p class="tiny" style="color:var(--blue);font-weight:700;margin-bottom:6px">${esc((S && S.settings && S.settings.name))}</p>` : ''}
       <h1>${first ? `${esc(me.name)}님, 어떤 생각이<br>가장 먼저 눈에 들어오세요?` : !all ? `${esc(me.name)}님, ${list.length}개 중<br>${done}개에 답하셨어요` : `${esc(me.name)}님,<br>모두 답하셨어요. 고마워요.`}</h1>
-      <p>${first ? '궁금한 것부터 눌러 보세요. 순서는 상관없어요.' : !all ? '남은 문항도 의견을 남겨주세요.' : fin ? '생각이 바뀌면 언제든 다시 눌러 바꿀 수 있어요.' : '마지막으로, 종합해서 한 줄만 남겨 주세요.'}</p>
+      <p>${first ? '궁금한 것부터 눌러 보세요. 순서는 상관없어요.' : !all ? '남은 문항이 있어요. 편하게 의견을 남겨주세요.' : fin ? '생각이 바뀌면 언제든 다시 눌러 바꿀 수 있어요.' : '마지막으로, 종합해서 한 줄만 남겨 주세요.'}</p>
       <div class="prog" aria-label="진행률"><i style="width:${pct(done, list.length)}%"></i></div>
     </div>
     ${(S && S.settings && S.settings.notice) ? `<div class="banner" style="margin:0 0 14px">${esc(S.settings.notice)}</div>` : ''}
