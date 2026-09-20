@@ -604,11 +604,25 @@ const miniHtml = t => `<div class="mini" role="img" aria-label="동의 ${t.pa}%,
 const isClosed = () => !!(S && S.settings && S.settings.closeAt) && new Date(S.settings.closeAt + 'T23:59:59') < new Date();
 const companyList = () => { const set = new Set((S && S.settings && S.settings.companies) || DEFAULT_COMPANIES); ((S && S.users) || []).forEach(u => { if (u.company) set.add(u.company); }); return [...set]; };
 
-async function go(v) { 
+let historyStack = [];
+
+async function go(v, isBack = false) { 
+  if (!isBack && view && (view.name !== v.name || view.aid !== v.aid || view.phase !== v.phase || view.stance !== v.stance)) {
+    historyStack.push(JSON.parse(JSON.stringify(view)));
+  }
   view = v; 
   if (REMOTE && Date.now() - lastLoad > 20000) await remoteLoad();
   render(); 
   window.scrollTo({ top: 0 }); 
+}
+
+function goBack() {
+  const prev = historyStack.pop();
+  if (prev) {
+    go(prev, true);
+  } else {
+    go({ name: 'home' }, true);
+  }
 }
 
 function render() {
@@ -835,8 +849,8 @@ function renderDetail(app) {
   const idx = list.findIndex(x => x.id === a.id);
   const closed = isClosed();
 
-  // "어떻게 생각하세요?"(ask) 화면에만 글자 없는 '←' 화살표 버튼 생성
-  const backBtn = view.phase === 'ask' ? '<button class="back" id="back" type="button" aria-label="뒤로가기"></button>' : '';
+  // 상단 좌측 '←' 화살표 버튼 복원
+  const backBtn = '<button class="back" id="back" type="button" aria-label="뒤로가기"></button>';
   const head = isFinal 
     ? `${backBtn}<p class="d-ctx">종합 정리</p>`
     : `${backBtn}<p class="d-ctx">${esc(a.tag)} · ${idx + 1}/${list.length}</p><div class="d-st">“${esc(a.statement)}”</div><p class="d-ctx">${esc(a.context)}</p>`;
@@ -849,9 +863,8 @@ function renderDetail(app) {
       ${v ? `<div style="margin-top:16px"><button class="btn sub" id="toRes" type="button">결과만 보기</button></div>` : ''}
     </div>`;
     
-    // 화살표 클릭 시 홈 화면으로 즉시 이동
-    const bk = $('#back'); if (bk) bk.onclick = () => go({ name: 'home' });     $$('.stance').forEach(b => b.onclick = () => { view.stance = b.dataset.s; view.phase = 'why'; render(); });
-    const tr = $('#toRes'); if (tr) tr.onclick = () => { view.phase = 'result'; render(); };
+    const bk = $('#back'); if (bk) bk.onclick = () => goBack();     $$('.stance').forEach(b => b.onclick = () => { go({ name: 'detail', aid: a.id, phase: 'why', stance: b.dataset.s }); });
+    const tr = $('#toRes'); if (tr) tr.onclick = () => { go({ name: 'detail', aid: a.id, phase: 'result' }); };
 
   } else if (view.phase === 'why') {
     const st = view.stance;
@@ -867,7 +880,8 @@ function renderDetail(app) {
     const ta = $('#why');
     const cnt = () => { $('#whyCnt').textContent = ta.value.length; };
     if (ta) { ta.oninput = cnt; cnt(); }
-    const wb = $('#whyBack'); if (wb) wb.onclick = () => { view.phase = 'ask'; render(); };
+    const bk = $('#back'); if (bk) bk.onclick = () => goBack();
+    const wb = $('#whyBack'); if (wb) wb.onclick = () => goBack();
 
     const commit = async (reason) => {
       const ix = S.votes.findIndex(x => x.uid === me.id && x.aid === a.id);
@@ -905,7 +919,8 @@ function renderDetail(app) {
       ta.oninput = cnt; cnt(); 
       ta.onfocus = () => { if (!ta.value) { ta.value = parts[0]; cnt(); } }; 
     }
-    const done = () => { toast('제출이 완료되었습니다.'); go({ name: 'ours' }); };
+    const bk = $('#back'); if (bk) bk.onclick = () => goBack();
+    const done = () => { toast('제출이 완료되었습니다.'); historyStack = []; go({ name: 'ours' }); };
 
     const sb = $('#submit'); 
     if (sb) sb.onclick = async () => {
@@ -939,9 +954,10 @@ function renderDetail(app) {
     </div>
     <div class="cta"><div class="in">${nextAg ? `<button class="btn" id="next" type="button">다음 생각거리 →</button>` : `<button class="btn" id="next" type="button">종합 한 줄 남기기</button>`}</div></div>`;
 
+    const bk = $('#back'); if (bk) bk.onclick = () => goBack();
     $$('.tabs [role=tab]').forEach(b => b.onclick = () => { view.tab = b.dataset.t; render(); });$$
 ('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
-    const c = $('#change'); if (c) c.onclick = () => { view.phase = 'ask'; view.tab = null; render(); };
+    const c = $('#change'); if (c) c.onclick = () => { go({ name: 'detail', aid: a.id, phase: 'ask', tab: null }); };
     const nx = $('#next'); if (nx) nx.onclick = () => nextAg ? go({ name: 'detail', aid: nextAg.id, phase: 'ask' }) : go({ name: 'detail', aid: 'final', phase: 'line' });
   }
 }
