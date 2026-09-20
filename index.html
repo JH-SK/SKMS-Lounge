@@ -66,7 +66,7 @@ header.top .in { max-width: var(--w); margin: 0 auto; padding: 12px 20px; displa
 /* 네비게이션 및 컴포넌트 */
 .bnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: rgba(255,255,255,.96); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
 .bnav .in { max-width: var(--w); margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
-.bnav button { background: none; border: 0; padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ink-4); font-size: .72rem; font-weight: 600; }
+.bnav button { background: none; border: 0; padding: 8px 2px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ink-4); font-size: .68rem; font-weight: 600; line-height: 1.15; text-align: center; }
 .bnav button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .bnav button[aria-current="page"] { color: var(--blue); font-weight: 700; }
 
@@ -317,7 +317,7 @@ header.top .in { max-width: var(--w); margin: 0 auto; padding: 12px 20px; displa
     </button>
     <button type="button" data-go="ideas" id="navIdeas">
       <svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 3z"/></svg>
-      Design 아이디어
+      <span>Design<br>아이디어</span>
     </button>
   </div>
 </nav>
