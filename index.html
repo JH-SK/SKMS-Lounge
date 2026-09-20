@@ -870,7 +870,7 @@ function renderDetail(app) {
     const st = view.stance;
     app.innerHTML = `<div class="step">${head}
       <div class="why"><p class="tiny" style="color:var(--blue);font-weight:700">${STANCES[st]}</p>
-        <h3 style="margin-top:4px">왜 그렇게 생각하세요?</h3><p class="tiny" style="margin-bottom:12px">자유롭게 한 줄로 작성해 주세요.</p>
+        <h3 style="margin-top:4px">${esc(a.prompt || '왜 그렇게 생각하세요?')}</h3><p class="tiny" style="margin-bottom:12px">자유롭게 한 줄로 작성해 주세요.</p>
         <textarea id="why" maxlength="200" placeholder="이유를 작성해 주세요.">${esc(v && v.stance === st ? v.reason : '')}</textarea>
         <div class="cnt"><span id="whyCnt">0</span>/200</div>
       </div>
@@ -1389,14 +1389,13 @@ function renderAdmin(app) {
           <div class="field"><label>1. 태그 (분류)</label><input id="edTag" value="${esc(editingAgenda.tag)}" placeholder="예: 표현, 행복, AI 시대"></div>
           <div class="field"><label>2. 질문 문항 (statement)</label><textarea id="edStatement" rows="2" placeholder="질문 내용을 입력하세요">${esc(editingAgenda.statement)}</textarea></div>
           <div class="field"><label>3. 배경 설명 (context)</label><textarea id="edContext" rows="2" placeholder="질문 하단에 표시될 설명글">${esc(editingAgenda.context)}</textarea></div>
-          <div class="field"><label>4. 한 줄 작성 유도 문구 (prompt)</label><input id="edPrompt" value="${esc(editingAgenda.prompt)}" placeholder="예: 내가 생각하는 SUPEX는"></div>
-          <div class="field"><label>5. 빈칸 양식 (fill)</label><input id="edFill" value="${esc(editingAgenda.fill)}" placeholder="예: SKMS는 ___ (___ 표시 자리에 입력창이 생깁니다)"></div>
-          <div class="field"><label>6. 노출 상태</label>
-            <select id="edActive">
-              <option value="true" ${editingAgenda.active ? 'selected' : ''}>공개 (설문 화면에 보임)</option>
-              <option value="false" ${!editingAgenda.active ? 'selected' : ''}>비공개 (숨김)</option>
-            </select>
-          </div>
+          <div class="field"><label>4. 이유 질문 문구</label><input id="edPrompt" value="${esc(editingAgenda.prompt || '왜 그렇게 생각하세요?')}" placeholder="예: 왜 그렇게 생각하세요?"></div>
+<div class="field"><label>5. 노출 상태</label>
+  <select id="edActive">
+    <option value="true" ${editingAgenda.active ? 'selected' : ''}>공개 (설문 화면에 보임)</option>
+    <option value="false" ${!editingAgenda.active ? 'selected' : ''}>비공개 (숨김)</option>
+  </select>
+</div>
           <div style="display:flex;gap:8px;margin-top:10px">
             <button class="btn sm" id="saveAgendaBtn" type="button">저장하기</button>
             <button class="btn sm sub" id="cancelAgendaBtn" type="button">취소</button>
@@ -1463,9 +1462,9 @@ function renderAdmin(app) {
       const tag = $('#edTag').value.trim();
       const statement = $('#edStatement').value.trim();
       const context = $('#edContext').value.trim();
-      const prompt = $('#edPrompt').value.trim();
-      const fill = $('#edFill').value.trim();
-      const active = $('#edActive').value === 'true';
+      const prompt = $('#edPrompt').value.trim() || '왜 그렇게 생각하세요?';
+const fill = '';
+const active = $('#edActive').value === 'true';
 
       if (!statement) { toast('질문 문항을 입력해 주세요.'); return; }
 
