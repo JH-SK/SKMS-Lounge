@@ -650,6 +650,7 @@ function render() {
 const bnavEl = $('#bnav'); if (bnavEl) bnavEl.onclick = e => { const b = e.target.closest('[data-go]'); if (b) go({ name: b.dataset.go }); };
 const myTopBtn = $('#navMyTop'); if (myTopBtn) myTopBtn.onclick = () => go({ name: 'me' });
 const adminBtn = $('#navAdmin'); if (adminBtn) adminBtn.onclick = () => go({ name: 'admin' });
+const brandBtn = $('.brand'); if (brandBtn) { brandBtn.style.cursor = 'pointer'; brandBtn.onclick = () => go({ name: 'home' }); }
 const outBtn = $('#navOut'); 
 if (outBtn) {
   outBtn.onclick = () => {
