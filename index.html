@@ -901,7 +901,7 @@ function renderDetail(app) {
 if (sb) sb.onclick = () => {
   const reason = ta ? ta.value.trim() : '';
   if (!reason) {
-    toast('이유를 한 글자 이상 작성해 주세요.');
+    toast('한 글자 이상 적어주세요.');
     return;
   }
   commit(reason);
