@@ -735,7 +735,14 @@ function renderGate(app) {
       if (u.name !== gate.name) { u.name = gate.name; await DB.user(u); }
       me = u;
       try { localStorage.setItem(KEYC + '_me', JSON.stringify(me)); } catch (e) {}
-      go({ name: 'home' });
+      
+      // 첫 번째 생각거리로 바로 진입
+      const list = orderedAgendas();
+      if (list.length > 0) {
+        go({ name: 'detail', aid: list[0].id, phase: 'ask' });
+      } else {
+        go({ name: 'home' });
+      }
     };
   } else if (s === 1) {
     const cos = (S && S.settings && S.settings.companies) || DEFAULT_COMPANIES;
@@ -794,7 +801,14 @@ function renderGate(app) {
         try { localStorage.setItem(KEYC + '_me', JSON.stringify(me)); } catch (e) {}
         
         DB.user(u);
-        go({ name: 'home' });
+        
+        // 첫 번째 생각거리로 바로 진입
+        const list = orderedAgendas();
+        if (list.length > 0) {
+          go({ name: 'detail', aid: list[0].id, phase: 'ask' });
+        } else {
+          go({ name: 'home' });
+        }
       };
     }
   }
@@ -848,8 +862,8 @@ function renderDetail(app) {
   const idx = list.findIndex(x => x.id === a.id);
   const closed = isClosed();
 
-  // 상단 좌측 '←' 화살표 버튼 복원
-  const backBtn = '<button class="back" id="back" type="button" aria-label="뒤로가기"></button>';
+  // 1번 문항(인덱스 0)일 때는 뒤로가기 화살표를 숨기고, 2번 문항부터 표시
+  const backBtn = idx > 0 ? '<button class="back" id="back" type="button" aria-label="뒤로가기"></button>' : '';
   const head = isFinal 
     ? `${backBtn}<p class="d-ctx">종합 정리</p>`
     : `${backBtn}<p class="d-ctx">${esc(a.tag)} · ${idx + 1}/${list.length}</p><div class="d-st">“${esc(a.statement)}”</div><p class="d-ctx">${esc(a.context)}</p>`;
