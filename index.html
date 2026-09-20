@@ -1057,7 +1057,7 @@ function renderERRC(app) {
         ${canSee ? (feeds.length ? `<div class="lst">${feeds.map(s => `<div class="sent ${s.uid === me.id ? 'mine' : ''}"><p>${esc(s.body)}</p><div class="m"><span>${s.uid === me.id ? '내 제안' : who(um[s.uid])}</span><span style="display:flex;gap:6px;align-items:center">${s.uid === me.id ? `<button type="button" class="like" data-delsent="${s.id}">지우기</button>` : ''}<button type="button" class="like ${liked(s.id) ? 'on' : ''}" data-like="${s.id}">공감 <span class="num">${likeCnt(s.id)}</span></button></span></div></div>`).join('')}</div>` : `<div class="empty" style="margin-top:10px;padding:16px">아직 등록된 제안이 없어요.</div>`) : `<div class="lock" style="margin-top:10px"><span>🔒</span><span>관리자 설정에 의해 공개 제한 중입니다.</span></div>`}
         ${!isClosed() ? `
         <div class="compose" style="margin-top:12px;padding:12px">
-          <textarea id="input_${item.id}" rows="2" style="min-height:70px" placeholder="${esc(item.title)}에 대한 제안을 적어주세요.">${esc(myItem ? myItem.body : '')}</textarea>
+          <textarea id="input_${item.id}" rows="2" style="min-height:70px" placeholder="">${esc(myItem ? myItem.body : '')}</textarea>
           <div style="display:flex;justify-content:flex-end;margin-top:8px">
             <button type="button" class="btn sm" data-errcsubmit="${item.id}">${myItem ? '고치기' : '등록하기'}</button>
           </div>
