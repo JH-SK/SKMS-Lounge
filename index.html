@@ -1015,15 +1015,24 @@ function renderOurs(app) {
   const msx = mySentence(finalAg.id);
 
   app.innerHTML = `<div class="step">
-    <div class="hero" style="padding-bottom:0"><h1>구성원이 다시 쓴<br>SKMS</h1><p>구성원들이 남긴 종합 한 줄 소견입니다.</p></div>
+    <div class="hero" style="padding-bottom:0"><h1>구성원이 다시 쓴<br>SKMS</h1><p>구성원들이 남긴 종합 한 줄 의견입니다.</p></div>
     <section class="theme">
       <div class="hd"><div><div class="tiny" style="font-weight:700;color:var(--blue)">종합 한 줄</div><div class="pr">내가 생각하는 SKMS는 <em>___</em></div></div><span class="tiny">${all.length}개</span></div>
-      ${canSee ? (all.length ? `<div class="lst">${all.map(s => `<div class="sent ${s.uid === me.id ? 'mine' : ''}"><p>${esc(s.body)}</p><div class="m"><span>${s.uid === me.id ? '내 한 줄' : who(um[s.uid])}</span><button type="button" class="like ${liked(s.id) ? 'on' : ''}" data-like="${s.id}">공감 <span class="num">${likeCnt(s.id)}</span></button></div></div>`).join('')}</div>` : `<div class="empty" style="margin-top:10px;padding:16px">아직 남긴 한 줄이 없어요.</div>`) : `<div class="lock" style="margin-top:10px"><span>🔒</span><span>관리자 설정에 의해 공개 제한 중입니다.</span></div>`}
+      ${canSee ? (all.length ? `<div class="lst">${all.map(s => `<div class="sent ${s.uid === me.id ? 'mine' : ''}"><p>${esc(s.body)}</p><div class="m"><span>${s.uid === me.id ? '내 한 줄' : who(um[s.uid])}</span><span style="display:flex;gap:6px;align-items:center">${s.uid === me.id ? `<button type="button" class="like" data-delsent="${s.id}">지우기</button>` : ''}<button type="button" class="like ${liked(s.id) ? 'on' : ''}" data-like="${s.id}">공감 <span class="num">${likeCnt(s.id)}</span></button></span></div></div>`).join('')}</div>` : `<div class="empty" style="margin-top:10px;padding:16px">아직 남긴 한 줄이 없어요.</div>`) : `<div class="lock" style="margin-top:10px"><span>🔒</span><span>관리자 설정에 의해 공개 제한 중입니다.</span></div>`}
       ${!isClosed() ? `<div class="add"><button type="button" class="btn sm sub" id="editFinalLine" style="width:100%">${msx ? '내 한 줄 고치기' : '종합 한 줄 남기기'}</button></div>` : ''}
     </section>
   </div>`;
   
-  $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
+  $$('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));$$
+('[data-delsent]').forEach(b => b.onclick = async () => {
+    if (!confirm('작성하신 한 줄 의견을 삭제하시겠습니까?')) return;
+    const id = b.dataset.delsent;
+    S.sentences = S.sentences.filter(s => s.id !== id);
+    S.likes = S.likes.filter(l => l.tid !== id);
+    toast('삭제되었습니다.');
+    render();
+    await DB.delSentence(id);
+  });
   const ef = $('#editFinalLine'); if (ef) ef.onclick = () => go({ name: 'detail', aid: 'final', phase: 'line' });
 }
 
