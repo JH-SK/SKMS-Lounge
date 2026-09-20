@@ -927,19 +927,48 @@ if (sb) sb.onclick = () => {
       ta.onfocus = () => { if (!ta.value) { ta.value = parts[0]; cnt(); } }; 
     }
     const bk = $('#back'); if (bk) bk.onclick = () => goBack();
-    const done = () => { toast('제출이 완료되었습니다.'); historyStack = []; go({ name: 'ours' }); };
 
-    const sb = $('#submit'); 
-    if (sb) sb.onclick = async () => {
-      let body = ta ? ta.value.trim() : '';
-      if (body === parts[0].trim()) body = '';
-      if (!body) { toast('한 줄을 적어 주세요'); return; }
-      const ix = S.sentences.findIndex(s => s.uid === me.id && s.aid === a.id);
-      const rec = { id: 's_' + me.id + '_' + a.id, uid: me.id, aid: a.id, body, hidden: ix >= 0 ? S.sentences[ix].hidden : false, at: Date.now() };
-      if (ix >= 0) S.sentences[ix] = rec; else S.sentences.push(rec);
-      done();
-      await DB.sentence(rec);
-    };
+// 제출 완료 후 안내 팝업을 띄우는 함수
+const showCompletionModal = () => {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:24px;padding:28px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);animation:in .25s ease both;">
+      <div style="font-size:2.2rem;margin-bottom:8px;">🎉</div>
+      <h2 style="font-size:1.3rem;font-weight:900;color:var(--ink);margin-bottom:10px;">소중한 의견 감사합니다!</h2>
+      <p style="font-size:0.95rem;color:var(--ink-2);line-height:1.55;word-break:keep-all;margin-bottom:22px;">
+        설문 작성이 완료되었습니다.<br>
+        Lounge의 다양한 메뉴를 통해 SKMS에 대한 더 풍성한 이야기를 나눠보세요!
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button type="button" class="btn" id="mGoErrc" style="background:var(--blue);color:#fff;">💡 ERRC 실천 제안하러 가기</button>
+        <button type="button" class="btn sub" id="mGoIdeas">💬 Next SKMS 아이디어 나누기</button>
+        <button type="button" class="btn sub" id="mGoOurs" style="background:none;color:var(--ink-3);font-size:0.88rem;padding:8px;">우리의 SKMS 둘러보기</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // 각 버튼 클릭 시 해당 화면으로 이동 및 모달 제거
+  modal.querySelector('#mGoErrc').onclick = () => { modal.remove(); historyStack = []; go({ name: 'errc' }); };
+  modal.querySelector('#mGoIdeas').onclick = () => { modal.remove(); historyStack = []; go({ name: 'ideas' }); };
+  modal.querySelector('#mGoOurs').onclick = () => { modal.remove(); historyStack = []; go({ name: 'ours' }); };
+};
+
+const sb = $('#submit'); 
+if (sb) sb.onclick = async () => {
+  let body = ta ? ta.value.trim() : '';
+  if (body === parts[0].trim()) body = '';
+  if (!body) { toast('한 줄을 적어 주세요'); return; }
+  
+  const ix = S.sentences.findIndex(s => s.uid === me.id && s.aid === a.id);
+  const rec = { id: 's_' + me.id + '_' + a.id, uid: me.id, aid: a.id, body, hidden: ix >= 0 ? S.sentences[ix].hidden : false, at: Date.now() };
+  if (ix >= 0) S.sentences[ix] = rec; else S.sentences.push(rec);
+  
+  // 완료 안내 팝업 노출
+  showCompletionModal();
+  await DB.sentence(rec);
+};
 
   } else {
     const t = tally(a.id);
