@@ -1278,19 +1278,16 @@ function renderAdmin(app) {
       <div style="margin-top:14px"><button class="btn" id="pinOk" type="button">확인</button></div></div>`;
     $('#back').onclick = () => go({ name: 'home' });
     
-    const ok = async () => {
+  const ok = async () => {
       const pin = $('#pin').value;
-      if (!REMOTE) {
-        if (pin === LOCAL_PIN) { adminOK = true; adminPin = pin; render(); }
-        else toast('코드가 맞지 않아요');
-        return;
-      }
-      adminPin = pin;
-      try {
-        await DB.admin('check', {}); adminOK = true;
+      if (pin === LOCAL_PIN) {
+        adminOK = true;
+        adminPin = pin;
         try { sessionStorage.setItem(KEY + '_admin', pin); } catch (e) {}
         render();
-      } catch (e) { adminPin = ''; toast('코드가 맞지 않아요'); }
+      } else {
+        toast('코드가 맞지 않아요');
+      }
     };
     $('#pinOk').onclick = ok; 
     $('#pin').onkeydown = e => { if (e.key === 'Enter') ok(); };
