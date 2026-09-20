@@ -1081,13 +1081,13 @@ function renderERRC(app) {
       const feeds = (S.sentences || []).filter(s => s.aid === item.id && !s.hidden).sort((x, y) => likeCnt(y.id) - likeCnt(x.id) || y.at - x.at);
       const myItem = mySentence(item.id);
       return `<section class="theme">
-        <div class="hd">
-          <div>
+        <div class="hd" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <div style="min-width:0;flex:1;">
             <div class="tiny" style="font-weight:700;color:var(--blue)">${esc(item.tag)}</div>
             <div class="pr">${esc(item.title)}</div>
             <p class="tiny" style="margin-top:4px;color:var(--ink-2)">${esc(item.prompt)}</p>
           </div>
-          <span class="tiny">${feeds.length}개</span>
+          <span class="tiny" style="white-space:nowrap;flex-shrink:0;">${feeds.length}개</span>
         </div>
         ${canSee ? (feeds.length ? `<div class="lst">${feeds.map(s => `<div class="sent ${s.uid === me.id ? 'mine' : ''}"><p>${esc(s.body)}</p><div class="m"><span>${s.uid === me.id ? '내 제안' : who(um[s.uid])}</span><span style="display:flex;gap:6px;align-items:center">${s.uid === me.id ? `<button type="button" class="like" data-delsent="${s.id}">지우기</button>` : ''}<button type="button" class="like ${liked(s.id) ? 'on' : ''}" data-like="${s.id}">공감 <span class="num">${likeCnt(s.id)}</span></button></span></div></div>`).join('')}</div>` : `<div class="empty" style="margin-top:10px;padding:16px">아직 등록된 제안이 없어요.</div>`) : `<div class="lock" style="margin-top:10px"><span>🔒</span><span>관리자 설정에 의해 공개 제한 중입니다.</span></div>`}
         ${!isClosed() ? `
