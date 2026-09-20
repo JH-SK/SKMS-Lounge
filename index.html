@@ -898,7 +898,14 @@ function renderDetail(app) {
     };
     
     const sb = $('#submit'); 
-    if (sb) sb.onclick = () => commit(ta ? ta.value.trim() : '');
+if (sb) sb.onclick = () => {
+  const reason = ta ? ta.value.trim() : '';
+  if (!reason) {
+    toast('이유를 한 글자 이상 작성해 주세요.');
+    return;
+  }
+  commit(reason);
+};
 
   } else if (view.phase === 'line') {
     const msx = mySentence(a.id);
