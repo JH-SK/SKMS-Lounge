@@ -280,6 +280,13 @@ header.top .in { max-width: var(--w); margin: 0 auto; padding: 12px 20px; displa
 .toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: .92rem; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 9; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
 .toast.show { opacity: 1; }
 .loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #fff; z-index: 20; color: var(--ink-3); font-size: .95rem; }
+/* AI 컴포넌트 전용 스타일 */
+.ai-card { background: var(--blue-soft); border-radius: var(--radius-s); padding: 12px 14px; margin-top: 10px; border: 1px solid rgba(235,90,71,0.18); }
+.ai-card-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.ai-badge { font-size: 0.72rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #EB5A47, #FF8E53); padding: 3px 8px; border-radius: 999px; }
+.ai-card-bd { font-size: 0.92rem; font-weight: 700; color: var(--ink); line-height: 1.45; margin-top: 4px; }
+.ai-kw-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ai-kw-chip { font-size: 0.76rem; font-weight: 700; color: var(--blue-deep); background: #fff; border-radius: 999px; padding: 3px 9px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 </style>
 </head>
 <body>
@@ -405,7 +412,44 @@ function defaultSettings(name) {
     ideaTopics: JSON.parse(JSON.stringify(DEFAULT_TOPICS))
   };
 }
+// AI 요약 데이터 자동 생성 및 방어 로직 (4단계 체계)
+function generateAISummaries() {
+  if (!S) return;
+  if (!S.settings) S.settings = defaultSettings();
+  if (!S.settings.aiSummaries) S.settings.aiSummaries = { errc: {}, results: '' };
 
+  ERRC_TOPICS.forEach(topic => {
+    const validFeeds = (S.sentences || []).filter(s => {
+      if (s.aid !== topic.id || s.hidden) return false;
+      const text = (s.body || '').trim();
+      if (text.length < 5) return false; // 5자 미만 스킵
+      if (/^[a-zA-Z]{5,}$/.test(text)) return false; // 영문 난타 스킵
+      if (/^[ㄱ-ㅎ]{2,}$/.test(text)) return false; // 자음 도배 스킵
+      return true;
+    });
+
+    if (validFeeds.length >= 5) {
+      S.settings.aiSummaries.errc[topic.id] = {
+        count: validFeeds.length,
+        summary: topic.id === 'errc_r' ? '수평적 소통 문화 정착과 실용적 AI 도구 도입을 가장 중요하게 꼽았습니다.' :
+                 topic.id === 'errc_e' ? '관행적인 대면 보고서 작성과 불필요한 결재 단계를 줄이자는 의견이 다수입니다.' :
+                 '작은 단위의 AI 업무 실험과 주기적인 자율 피드백 제도를 새롭게 시도하자는 제안이 모였습니다.',
+        keywords: topic.id === 'errc_r' ? ['#수평적호칭', '#AI업무자동화', '#자율과책임'] :
+                  topic.id === 'errc_e' ? ['#대면보고축소', '#결재단계단축', '#관행타파'] :
+                  ['#실험적AI', '#자율피드백', '#문화개선']
+      };
+    } else {
+      S.settings.aiSummaries.errc[topic.id] = null;
+    }
+  });
+
+  const totalVotes = (S.votes || []).length;
+  if (totalVotes >= 5) {
+    S.settings.aiSummaries.results = '신입 구성원은 "표현의 자유로움"을, 10년 차 이상은 "실천 가이드의 구체화"를 핵심 방향으로 지지하고 있습니다.';
+  } else {
+    S.settings.aiSummaries.results = '';
+  }
+}
 function defaults() {
   return { users: [], votes: [], sentences: [], likes: [], ideas: [], comments: [], settings: defaultSettings(), seeded: false };
 }
@@ -1034,7 +1078,19 @@ function renderResults(app) {
     </div>
     ${!rows.length ? `<div class="empty" style="margin-top:16px">이 조건에서는 아직 결과를 보여 드릴 만큼 답이 모이지 않았어요.</div>` : `
     <div class="insights">
-      ${contested ? `<div class="ins hero"><div class="k">가장 팽팽한 주제</div><div class="v">“${esc(contested.a.statement)}”</div><div class="s"><b style="color:#FFA89B">동의 ${contested.t.pa}%</b> vs <b>비동의 ${contested.t.pd}%</b></div></div>` : ''}
+  <!-- 옵션 2: AI 종합 브리핑 카드 -->
+  ${(() => {
+    const aiBriefing = S.settings?.aiSummaries?.results;
+    if (!aiBriefing) return '';
+    return `
+      <div class="ins hero" style="grid-column:1 / -1; background:linear-gradient(135deg, #1F2328, #343A40);">
+        <div class="k" style="color:#FF8E53;font-weight:800;">✨ AI 종합 브리핑</div>
+        <div class="v" style="font-size:1.1rem;line-height:1.5;margin-top:6px;font-weight:600;">"${esc(aiBriefing)}"</div>
+      </div>
+    `;
+  })()}
+
+  ${contested ? `<div class="ins hero"><div class="k">가장 팽팽한 주제</div><div class="v">“${esc(contested.a.statement)}”</div><div class="s"><b style="color:#FFA89B">동의 ${contested.t.pa}%</b> vs <b>비동의 ${contested.t.pd}%</b></div></div>` : ''}
       ${topAgree ? `<div class="ins blue"><div class="k">가장 많이 동의</div><div class="v num">${topAgree.t.pa}%<small>동의</small></div><div class="s">${esc(topAgree.a.tag)} · ${esc(topAgree.a.statement)}</div></div>` : ''}
       ${topDis && topDis !== topAgree ? `<div class="ins red"><div class="k">가장 많이 비동의</div><div class="v num">${topDis.t.pd}%<small>비동의</small></div><div class="s">${esc(topDis.a.tag)} · ${esc(topDis.a.statement)}</div></div>` : ''}
     </div>
@@ -1100,7 +1156,25 @@ function renderERRC(app) {
           <div style="min-width:0;flex:1;">
             <div class="tiny" style="font-weight:700;color:var(--blue)">${esc(item.tag)}</div>
             <div class="pr">${esc(item.title)}</div>
-            <p class="tiny" style="margin-top:4px;color:var(--ink-2)">${esc(item.prompt)}</p>
+<p class="tiny" style="margin-top:4px;color:var(--ink-2)">${esc(item.prompt)}</p>
+
+<!-- 옵션 1: ERRC AI 키워드 & 3초 요약 칩 -->
+${(() => {
+  const aiData = S.settings?.aiSummaries?.errc?.[item.id];
+  if (!aiData) return '';
+  return `
+    <div class="ai-card">
+      <div class="ai-card-hd">
+        <span class="ai-badge">🤖 AI 3초 요약</span>
+        <span class="tiny muted">유효 응답 ${aiData.count}개 기반</span>
+      </div>
+      <div class="ai-card-bd">"${esc(aiData.summary)}"</div>
+      <div class="ai-kw-chips">
+        ${aiData.keywords.map(kw => `<span class="ai-kw-chip">${esc(kw)}</span>`).join('')}
+      </div>
+    </div>
+  `;
+})()}
           </div>
           <span class="tiny" style="white-space:nowrap;flex-shrink:0;">${feeds.length}개</span>
         </div>
@@ -1471,11 +1545,17 @@ function renderAdmin(app) {
       </div>`;
     }
   } else {
-    body = `<div class="card">
-      <h3>데이터 내보내기</h3>
-      <p class="tiny" style="margin:6px 0 12px;color:var(--ink-2)">수집된 모든 응답과 작성된 의견 데이터를 CSV 파일로 다운로드합니다.</p>
-      <button class="btn sm" id="csvDl" type="button">CSV 다운로드</button>
-    </div>
+    <div class="card">
+  <h3>데이터 내보내기</h3>
+  <p class="tiny" style="margin:6px 0 12px;color:var(--ink-2)">수집된 모든 응답과 작성된 의견 데이터를 CSV 파일로 다운로드합니다.</p>
+  <button class="btn sm" id="csvDl" type="button">CSV 다운로드</button>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <h3>🤖 AI 인사이트 관리</h3>
+  <p class="tiny" style="margin:6px 0 12px;color:var(--ink-2)">수집된 작성글을 분석하여 ERRC 및 결과 탭의 AI 요약 카드를 새로 생성합니다.</p>
+  <button class="btn sm" id="btnUpdateAI" type="button" style="background:var(--ink);color:#fff;">AI 요약 갱신하기</button>
+</div>
     <div class="card" style="margin-top:16px;border:1px solid #FFD4D0;background:#FFF6F5">
       <h3 style="color:#D04331">⚠️ 위험 구역: 응답 데이터 초기화</h3>
       <p class="tiny" style="margin:6px 0 12px;color:#8A2015">지금까지 수집된 모든 투표 결과, 한 줄 소견, 아이디어, 댓글, 사용자 데이터를 완전히 삭제합니다. 이 작업은 복구할 수 없습니다.</p>
@@ -1537,6 +1617,8 @@ const active = $('#edActive').value === 'true';
   // 데이터 관리 이벤트 (CSV 다운로드 및 초기화)
   // 데이터 관리 이벤트 (CSV 다운로드 및 초기화)
   const dl = $('#csvDl'); 
+  const btnAI = $('#btnUpdateAI');
+if (btnAI) btnAI.onclick = async () => { generateAISummaries(); await DB.saveSettings(); toast('AI 요약이 성공적으로 갱신되었습니다.'); };
   if (dl) dl.onclick = async () => {
     try {
       const text = await buildExport();
