@@ -1327,7 +1327,7 @@ function renderIdeas(app) {
   const t = topics.find(x => x.id === cur);
   
   app.innerHTML = `<div class="step">
-    <div class="hero" style="padding-bottom:0"><h1>Next SKMS를 위한<br>아이디어</h1><p>마음에 드는 제안에 들어가 의견을 더해 주세요.</p></div>
+    <div class="hero" style="padding-bottom:0"><h1>Next SKMS를 위한<br>어떻게 함께 만들어가면 좋을까요?</h1><p>마음에 드는 제안에 들어가 의견을 더해 주세요.</p></div>
     <div class="topics">
       <button type="button" data-topic="" aria-pressed="${!cur}">전체 &nbsp;${S.ideas.filter(i => !i.hidden).length}</button>${topics.map(x => `<button type="button" data-topic="${esc(x.id)}" aria-pressed="${cur === x.id}">${esc(x.title)} &nbsp;${S.ideas.filter(i => !i.hidden && i.topic === x.id).length}</button>`).join('')}
     </div>
