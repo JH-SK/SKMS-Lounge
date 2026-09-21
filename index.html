@@ -1178,7 +1178,7 @@ function renderResults(app) {
 
     ${!rows.length ? `<div class="empty" style="margin-top:16px">이 조건에서는 아직 결과를 보여 드릴 만큼 답이 모이지 않았어요.</div>` : `
     <div class="insights">
-      ${contested ? `<div class="ins hero"><div class="k">가장 팽팽한 주제</div><div class="v">“${esc(contested.a.statement)}”</div><div class="s"><b style="color:#FFA89B">동의 ${contested.t.pa}%</b> vs <b>비동의 ${contested.t.pd}%</b></div></div>` : ''}
+      ${contested ? `<div class="ins hero"><div class="k">가장 팽팽한 주제</div><div class="v" style="font-size: 1.2rem;">“${esc(contested.a.statement)}”</div><div class="s"><b style="color:#FFA89B">동의 ${contested.t.pa}%</b> vs <b>비동의 ${contested.t.pd}%</b></div></div>` : ''}
       ${topAgree ? `<div class="ins blue"><div class="k">가장 많이 동의</div><div class="v num">${topAgree.t.pa}%<small>동의</small></div><div class="s">${esc(topAgree.a.tag)} · ${esc(topAgree.a.statement)}</div></div>` : ''}
       ${topDis && topDis !== topAgree ? `<div class="ins red"><div class="k">가장 많이 비동의</div><div class="v num">${topDis.t.pd}%<small>비동의</small></div><div class="s">${esc(topDis.a.tag)} · ${esc(topDis.a.statement)}</div></div>` : ''}
     </div>
