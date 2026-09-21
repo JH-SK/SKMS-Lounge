@@ -1536,8 +1536,30 @@ const active = $('#edActive').value === 'true';
   if (cancelAg) cancelAg.onclick = () => { view.editingAgendaId = null; render(); };
 
   // 데이터 관리 이벤트 (CSV 다운로드 및 초기화)
+  // 데이터 관리 이벤트 (CSV 다운로드 및 초기화)
   const dl = $('#csvDl'); 
-  if (dl) dl.onclick = async () => { const text = await buildExport(); downloadText('skms_export.csv', text); };
+  if (dl) dl.onclick = async () => {
+    try {
+      const text = await buildExport();
+      // 엑셀 한글 깨짐 방지용 UTF-8 BOM(\uFEFF) 추가 및 다운로드 실행
+      const blob = new Blob(['\uFEFF' + text], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const fileName = `SKMS_Lounge_Data_${new Date().toISOString().slice(0, 10)}.csv`;
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast('CSV 데이터 다운로드가 완료되었습니다.');
+    } catch (err) {
+      console.error(err);
+      toast('다운로드 중 오류가 발생했습니다.');
+    }
+  };
 
   const resetBtn = $('#resetDataBtn');
   if (resetBtn) {
