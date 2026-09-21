@@ -1545,7 +1545,24 @@ function renderAdmin(app) {
       </div>`;
     }
   } else {
-    <div class="card">
+    body = `<div class="card">
+      <h3>데이터 내보내기</h3>
+      <p class="tiny" style="margin:6px 0 12px;color:var(--ink-2)">수집된 모든 응답과 작성된 의견 데이터를 CSV 파일로 다운로드합니다.</p>
+      <button class="btn sm" id="csvDl" type="button">CSV 다운로드</button>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>🤖 AI 인사이트 관리</h3>
+      <p class="tiny" style="margin:6px 0 12px;color:var(--ink-2)">수집된 작성글을 분석하여 ERRC 및 결과 탭의 AI 요약 카드를 새로 생성합니다.</p>
+      <button class="btn sm" id="btnUpdateAI" type="button" style="background:var(--ink);color:#fff;">AI 요약 갱신하기</button>
+    </div>
+
+    <div class="card" style="margin-top:16px;border:1px solid #FFD4D0;background:#FFF6F5">
+      <h3 style="color:#D04331">⚠️ 위험 구역: 응답 데이터 초기화</h3>
+      <p class="tiny" style="margin:6px 0 12px;color:#8A2015">지금까지 수집된 모든 투표 결과, 한 줄 소견, 아이디어, 댓글, 사용자 데이터를 완전히 삭제합니다. 이 작업은 복구할 수 없습니다.</p>
+      <button class="btn sm" id="resetDataBtn" type="button" style="background:#EB5A47;color:#fff">전체 데이터 초기화하기</button>
+    </div>`;
+  }
   <h3>데이터 내보내기</h3>
   <p class="tiny" style="margin:6px 0 12px;color:var(--ink-2)">수집된 모든 응답과 작성된 의견 데이터를 CSV 파일로 다운로드합니다.</p>
   <button class="btn sm" id="csvDl" type="button">CSV 다운로드</button>
