@@ -1091,7 +1091,7 @@ function renderERRC(app) {
   const canSee = (S && S.settings && S.settings.sentencesPublic) || adminOK;
   
   app.innerHTML = `<div class="step">
-    <div class="hero" style="padding-bottom:0"><h1>Next SKMS를 위한<br>ERRC 제안</h1><p>새로운 SKMS를 위해 줄일 것, 강화할 것, 새로 시도할 것에 대한 제안입니다.</p></div>
+    <div class="hero" style="padding-bottom:0"><h1>Next SKMS를 위한<br>ERRC 제안</h1><p>New SKMS를 위해 강화할 것, 보완/줄일 것, 새롭게 할 것에 대한 제안입니다.</p></div>
     ${ERRC_TOPICS.map(item => {
       const feeds = (S.sentences || []).filter(s => s.aid === item.id && !s.hidden).sort((x, y) => likeCnt(y.id) - likeCnt(x.id) || y.at - x.at);
       const myItem = mySentence(item.id);
