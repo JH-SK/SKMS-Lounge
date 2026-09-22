@@ -1522,23 +1522,47 @@ async function buildExport() {
   const users = S.users || [], votes = S.votes || [], sentences = S.sentences || [], likes = S.likes || [], ideas = S.ideas || [], comments = S.comments || [];
   const um = Object.fromEntries(users.map(u => [u.id, u]));
   const lc = tid => likes.filter(l => l.tid === tid).length;
+  const stanceMap = { agree: '동의', unsure: '모르겠음', disagree: '비동의' };
   
   const fmtAt = at => {
-    try { return at ? new Date(at).toISOString() : ''; } catch(e) { return ''; }
+    if (!at) return '';
+    try {
+      const d = new Date(at);
+      if (isNaN(d.getTime())) return '';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    } catch(e) { return ''; }
   };
 
-  const rows = [['type', 'user_id', 'name', 'company', 'tenure', 'entry', 'agenda_id', 'agenda_tag', 'agenda', 'stance', 'text', 'likes', 'hidden', 'at']];
+  const rows = [['데이터 구분', '사용자 ID', '성명', '소속 회사', '근속 연수', '입사 유형', '안건/주제 ID', '안건/주제 태그', '질문 내용', '선택 결과', '주관식 내용', '공감 수', '숨김 여부', '작성 일시']];
 
-  votes.forEach(v => { const u = um[v.uid] || {}; const a = agendaById(v.aid) || {}; rows.push(['vote', v.uid, u.name, u.company, u.tenure, u.entry, v.aid, a.tag, a.statement, v.stance, v.reason, lc(v.id), v.hidden ? 'Y' : '', fmtAt(v.at)]); });
-  sentences.forEach(s => { const u = um[s.uid] || {}; const a = agendaById(s.aid) || {}; rows.push(['sentence', s.uid, u.name, u.company, u.tenure, u.entry, s.aid, a.tag, a.prompt, '', s.body, lc(s.id), s.hidden ? 'Y' : '', fmtAt(s.at)]); });
+  votes.forEach(v => { 
+    const u = um[v.uid] || {}; 
+    const a = agendaById(v.aid) || {}; 
+    rows.push(['설문 투표', v.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', v.aid, a.tag || '', a.statement || '', stanceMap[v.stance] || v.stance || '', v.reason || '', lc(v.id), v.hidden ? 'Y' : '', fmtAt(v.at)]); 
+  });
+  
+  sentences.forEach(s => { 
+    const u = um[s.uid] || {}; 
+    const a = agendaById(s.aid) || {}; 
+    const stype = s.aid === 'final' ? '종합 한줄' : (s.aid && s.aid.startsWith('errc_') ? 'ERRC 제안' : '한줄 의견');
+    rows.push([stype, s.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', s.aid, a.tag || (s.aid === 'final' ? '종합' : ''), a.prompt || a.statement || '', '', s.body || '', lc(s.id), s.hidden ? 'Y' : '', fmtAt(s.at)]); 
+  });
   
   const tpName = id => (((S && S.settings && S.settings.ideaTopics) || DEFAULT_TOPICS).find(t => t.id === id) || {}).title || id;
-  ideas.forEach(i => { const u = um[i.uid] || {}; rows.push(['idea', i.uid, u.name, u.company, u.tenure, u.entry, i.topic, tpName(i.topic), '', '', i.body, lc(i.id), i.hidden ? 'Y' : '', fmtAt(i.at)]); });
-  comments.forEach(c => { const u = um[c.uid] || {}; rows.push(['comment', c.uid, u.name, u.company, u.tenure, u.entry, c.ideaId, c.kind || 'comment', '', '', c.body, lc(c.id), c.hidden ? 'Y' : '', fmtAt(c.at)]); });
+  ideas.forEach(i => { 
+    const u = um[i.uid] || {}; 
+    rows.push(['Design 아이디어', i.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', i.topic, tpName(i.topic), '', '', i.body || '', lc(i.id), i.hidden ? 'Y' : '', fmtAt(i.at)]); 
+  });
+  
+  comments.forEach(c => { 
+    const u = um[c.uid] || {}; 
+    const ctype = c.kind === 'idea' ? '아이디어 덧붙이기' : '댓글';
+    rows.push([ctype, c.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', c.ideaId, c.kind || 'comment', '', '', c.body || '', lc(c.id), c.hidden ? 'Y' : '', fmtAt(c.at)]); 
+  });
 
   return csvText(rows);
 }
-
 function renderAdmin(app) {
   if (!adminOK) {
     app.innerHTML = `<div class="step"><button class="back" id="back" type="button">메인으로</button>
