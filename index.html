@@ -406,7 +406,7 @@ const MIN_N = 5;
 
 const TENURES = ['5년 미만', '5~10년', '10~15년', '15~20년', '20년 이상'];
 const ENTRIES = ['신입 입사', '경력 입사'];
-const DEFAULT_COMPANIES = ['SK(주)','SK이노베이션','SK텔레콤','SK하이닉스','SK스퀘어','SK네트웍스','SK에코플랜트','SKC','SK실트론','SK바이오팜','SK케미칼','SK가스','SK디스커버리','SK온','SK엔무브','SK지오센트릭','SK에너지','SK브로드밴드','SK플래닛','SK바이오사이언스'];
+const DEFAULT_COMPANIES = ['SK Inc.','SK텔레콤','SK AX','SK하이닉스','SKC','SK브로드밴드','SK스퀘어','SK에너지','SK에코플랜트','SK아카데미','SK이노베이션','SK이노베이션 E&S','SK온','mySUNI','SK가스','SK인텔릭스','SK케미칼','SK텔링크','SK플라즈마','SK디스커버리','SK머티리얼즈 제이엔씨','SK바이오팜','워커힐','SK키파운드리','SUPEX추구협의회'];
 
 const STANCES = { agree: '동의해요', unsure: '잘 모르겠어요', disagree: '동의하지 않아요' };
 const SLABEL = { agree: '동의', unsure: '모르겠음', disagree: '비동의' };
@@ -480,7 +480,8 @@ function normalizeSettings(st) {
  if (!st || typeof st !== 'object') return d;
  for (const k in d) if (st[k] === undefined) st[k] = d[k];
  if (st.name === 'SKMS 보이스') st.name = 'SKMS Lounge';
- st.ideaTopics = JSON.parse(JSON.stringify(DEFAULT_TOPICS)); // ★ 최신 주제명 동기화 1줄 추가
+ st.ideaTopics = JSON.parse(JSON.stringify(DEFAULT_TOPICS));
+ st.companies = DEFAULT_COMPANIES.slice(); // ★ 최신 회사 목록 강제 동기화 (1줄 추가)
  return st;
 }
 const ms = t => typeof t === 'number' ? t : new Date(t).getTime();
@@ -899,9 +900,11 @@ function renderGate(app) {
       const u = gate.existing;
       if (u.name !== gate.name) { u.name = gate.name; await DB.user(u); }
       me = u;
-      try { localStorage.setItem(KEYC + '_me', JSON.stringify(me)); } catch (e) {}
-      
-      const list = orderedAgendas();
+        try { localStorage.setItem(KEYC + '_me', JSON.stringify(me)); } catch (e) {}
+        
+        await DB.user(u);
+        
+        const list = orderedAgendas();
       if (list.length > 0) {
         go({ name: 'detail', aid: list[0].id, phase: 'ask' });
       } else {
