@@ -215,7 +215,7 @@ header.top .in { max-width: var(--w); margin: 0 auto; padding: 12px 20px; displa
 .theme .pr em { font-style: normal; color: var(--blue); }
 .theme .lst { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .sent { background: var(--soft); border-radius: 12px; padding: 12px 14px; }
-.sent p { font-size: .98rem; line-height: 1.55; font-weight: 500; }
+.sent p { font-size: 1.05rem; line-height: 1.55; font-weight: 700; word-break: keep-all; overflow-wrap: break-word; } /* ★ 폰트 키우고 단어단위 줄바꿈 속성 추가 */
 .sent .m { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: .76rem; color: var(--ink-3); gap: 8px; }
 .sent.mine { box-shadow: inset 0 0 0 1.5px var(--blue); }
 .theme .add { margin-top: 12px; display: flex; gap: 8px; }
@@ -1098,8 +1098,8 @@ function renderDetail(app) {
       <div class="why"><p class="tiny" style="color:var(--blue);font-weight:700">종합 한 줄</p>
         <h3 style="margin-top:4px">${esc(a.prompt)}</h3>
         <div class="fill">${esc(parts[0])}<em>___</em>${esc(parts[1] || '')}</div>
-        <p class="tiny" style="margin:10px 0 12px">나만의 SKMS 한 줄을 남겨주세요.</p>
-        <textarea id="line" maxlength="120" style="min-height:90px" placeholder="${esc(a.fill.replace('___', '…'))}">${esc(msx ? msx.body : '')}</textarea>
+        <p class="tiny" style="margin:10px 0 12px">빈칸에 들어갈 나만의 핵심 키워드/문장을 적어주세요.</p>
+        <textarea id="line" maxlength="120" style="min-height:90px" placeholder="예: 실천다짐, SK 구성원이 함께 바라봐야 할 방향">${esc(msx ? msx.body.replace(/^내가 생각하는 SKMS는\s*/, '') : '')}</textarea>
         <div class="cnt"><span id="lineCnt">0</span>/120</div></div></div>
     <div class="cta"><div class="in"><button class="btn" id="submit" type="button">제출하고 완료하기</button></div></div>`;
 
@@ -1231,7 +1231,10 @@ function renderOurs(app) {
     <div class="hero" style="padding-bottom:0"><h1>구성원이 다시 쓴<br>SKMS</h1><p>구성원들이 남긴 종합 한 줄 의견입니다.</p></div>
     <section class="theme">
       <div class="hd"><div><div class="tiny" style="font-weight:700;color:var(--blue)">종합 한 줄</div><div class="pr">내가 생각하는 SKMS는 <em>___</em></div></div><span class="tiny">${all.length}개</span></div>
-      ${canSee ? (all.length ? `<div class="lst">${all.map(s => `<div class="sent ${s.uid === me.id ? 'mine' : ''}"><p>${esc(s.body)}</p><div class="m"><span>${s.uid === me.id ? '내 한 줄' : who(um[s.uid])}</span><span style="display:flex;gap:6px;align-items:center">${s.uid === me.id ? `<button type="button" class="like" data-delsent="${s.id}">지우기</button>` : ''}<button type="button" class="like ${liked(s.id) ? 'on' : ''}" data-like="${s.id}">공감 <span class="num">${likeCnt(s.id)}</span></button></span></div></div>`).join('')}</div>` : `<div class="empty" style="margin-top:10px;padding:16px">아직 남긴 한 줄이 없어요.</div>`) : `<div class="lock" style="margin-top:10px"><span>🔒</span><span>관리자 설정에 의해 공개 제한 중입니다.</span></div>`}
+      ${canSee ? (all.length ? `<div class="lst">${all.map(s => {
+        const cleanBody = s.body.replace(/^내가 생각하는 SKMS는\s*/, ''); // ★ 앞문구 자동 정돈 로직
+        return `<div class="sent ${s.uid === me.id ? 'mine' : ''}"><p>${esc(cleanBody)}</p><div class="m"><span>${s.uid === me.id ? '내 한 줄' : who(um[s.uid])}</span><span style="display:flex;gap:6px;align-items:center">${s.uid === me.id ? `<button type="button" class="like" data-delsent="${s.id}">지우기</button>` : ''}<button type="button" class="like ${liked(s.id) ? 'on' : ''}" data-like="${s.id}">공감 <span class="num">${likeCnt(s.id)}</span></button></span></div></div>`;
+      }).join('')}</div>` : `<div class="empty" style="margin-top:10px;padding:16px">아직 남긴 한 줄이 없어요.</div>`) : `<div class="lock" style="margin-top:10px"><span>🔒</span><span>관리자 설정에 의해 공개 제한 중입니다.</span></div>`}
       ${!isClosed() ? `<div class="add"><button type="button" class="btn sm sub" id="editFinalLine" style="width:100%">${msx ? '내 한 줄 고치기' : '종합 한 줄 남기기'}</button></div>` : ''}
     </section>
   </div>`;
