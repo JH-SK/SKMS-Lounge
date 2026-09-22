@@ -1198,11 +1198,16 @@ function renderResults(app) {
       ${topDis && topDis !== topAgree ? `<div class="ins red"><div class="k">가장 많이 비동의</div><div class="v num">${topDis.t.pd}%<small>비동의</small></div><div class="s">${esc(topDis.a.tag)} · ${esc(topDis.a.statement)}</div></div>` : ''}
     </div>
 
-    <div class="sec"><h2>합의 지도</h2><span class="tiny">동의가 많을수록 오른쪽</span></div>
-    <div class="dmap"><div class="hd"><span>← 동의하지 않아요</span><span>동의해요 →</span></div>
-      ${sorted.map(({ a, t }) => `<button type="button" class="drow" data-a="${a.id}"><div class="lab"><span>${esc(a.statement)}</span><span class="tg">${t.n}명</span></div>
-        <div class="tr"><i class="l" style="width:${t.pd / 2}%"></i><i class="r" style="width:${t.pa / 2}%"></i><span class="pl" style="right:calc(50% + ${t.pd / 2}%)">${t.pd}%</span><span class="pr" style="left:calc(50% + ${t.pa / 2}%)">${t.pa}%</span></div></button>`).join('')}
-    </div>
+    <div class="sec"><h2>문항별 응답 현황</h2><span class="tiny">탭하면 상세 보기</span></div>
+        <div class="dmap" style="gap:12px;">
+          ${sorted.map(({ a, t }) => `<button type="button" class="drow" data-a="${a.id}" style="background:#fff;padding:16px;border-radius:16px;box-shadow:var(--shadow);">
+            <div class="lab" style="margin-bottom:10px;align-items:baseline;">
+              <span style="font-size:0.98rem;font-weight:700;color:var(--ink);">${esc(a.statement)}</span>
+              <span class="tg" style="font-weight:700;color:var(--agree);font-size:0.88rem;">${t.pa}% 동의 <small style="color:var(--ink-3);font-weight:400;">· ${t.n}명</small></span>
+            </div>
+            ${miniHtml(t)}
+          </button>`).join('')}
+        </div>
 
     <div class="sec"><h2>회사별 참여</h2></div>
     <div class="cbars">${byCompany.map(x => `<div class="cb"><span>${esc(x.c)}</span><div class="tk"><i style="width:${x.n / maxC * 100}%"></i></div><span class="n num">${x.n}명</span></div>`).join('')}</div>`}
