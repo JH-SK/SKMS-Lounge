@@ -1524,6 +1524,12 @@ async function buildExport() {
   const lc = tid => likes.filter(l => l.tid === tid).length;
   const stanceMap = { agree: '동의', unsure: '모르겠음', disagree: '비동의' };
   
+  const errcLabelMap = {
+    'errc_r': 'ERRC-Raise (지키고 강화할 것)',
+    'errc_e': 'ERRC-Reduce & Eliminate (보완/줄일 것)',
+    'errc_c': 'ERRC-Create (새로 추가할 것)'
+  };
+
   const fmtAt = at => {
     if (!at) return '';
     try {
@@ -1534,36 +1540,77 @@ async function buildExport() {
     } catch(e) { return ''; }
   };
 
-  const rows = [['데이터 구분', '사용자 ID', '성명', '소속 회사', '근속 연수', '입사 유형', '안건/주제 ID', '안건/주제 태그', '질문 내용', '선택 결과', '주관식 내용', '공감 수', '숨김 여부', '작성 일시']];
+  const rows = [[
+    '데이터 구분', '세부 유형', '사용자 ID', '성명', '소속 회사', '근속 연수', '입사 유형', 
+    '안건/주제 ID', '안건/주제 태그', '질문 내용/프롬프트', '선택 결과', 
+    '[주관식] 설문 이유(Why)', '[주관식] 종합 한 줄', '[주관식] ERRC 제안', '[주관식] Design 아이디어/댓글', 
+    '공감 수', '숨김 여부', '작성 일시'
+  ]];
 
+  // 1. 설문 투표 (Votes)
   votes.forEach(v => { 
     const u = um[v.uid] || {}; 
     const a = agendaById(v.aid) || {}; 
-    rows.push(['설문 투표', v.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', v.aid, a.tag || '', a.statement || '', stanceMap[v.stance] || v.stance || '', v.reason || '', lc(v.id), v.hidden ? 'Y' : '', fmtAt(v.at)]); 
+    rows.push([
+      '설문 투표', '설문 이유(Why)', v.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', 
+      v.aid, a.tag || '', a.statement || '', stanceMap[v.stance] || v.stance || '', 
+      v.reason || '', '', '', '', 
+      lc(v.id), v.hidden ? 'Y' : '', fmtAt(v.at)
+    ]); 
   });
   
+  // 2. 문장 및 ERRC 제안 (Sentences)
   sentences.forEach(s => { 
     const u = um[s.uid] || {}; 
     const a = agendaById(s.aid) || {}; 
-    const stype = s.aid === 'final' ? '종합 한줄' : (s.aid && s.aid.startsWith('errc_') ? 'ERRC 제안' : '한줄 의견');
-    rows.push([stype, s.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', s.aid, a.tag || (s.aid === 'final' ? '종합' : ''), a.prompt || a.statement || '', '', s.body || '', lc(s.id), s.hidden ? 'Y' : '', fmtAt(s.at)]); 
+    const isFinal = s.aid === 'final';
+    const isErrc = s.aid && s.aid.startsWith('errc_');
+    
+    const mainType = isFinal ? '종합 한줄' : (isErrc ? 'ERRC 제안' : '한줄 의견');
+    const subType = isFinal ? '종합 한줄' : (errcLabelMap[s.aid] || '한줄 의견');
+    const tag = a.tag || (isFinal ? '종합' : (isErrc ? s.aid.replace('errc_', '').toUpperCase() : ''));
+    const prompt = a.prompt || a.statement || '';
+
+    const surveyWhy = '';
+    const finalLine = isFinal ? (s.body || '') : '';
+    const errcText = isErrc ? (s.body || '') : '';
+    const ideaText = (!isFinal && !isErrc) ? (s.body || '') : '';
+
+    rows.push([
+      mainType, subType, s.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', 
+      s.aid, tag, prompt, '', 
+      surveyWhy, finalLine, errcText, ideaText, 
+      lc(s.id), s.hidden ? 'Y' : '', fmtAt(s.at)
+    ]); 
   });
   
+  // 3. Design 아이디어 본문 (Ideas)
   const tpName = id => (((S && S.settings && S.settings.ideaTopics) || DEFAULT_TOPICS).find(t => t.id === id) || {}).title || id;
   ideas.forEach(i => { 
     const u = um[i.uid] || {}; 
-    rows.push(['Design 아이디어', i.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', i.topic, tpName(i.topic), '', '', i.body || '', lc(i.id), i.hidden ? 'Y' : '', fmtAt(i.at)]); 
+    rows.push([
+      'Design 아이디어', '아이디어 본문', i.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', 
+      i.topic, tpName(i.topic), '', '', 
+      '', '', '', i.body || '', 
+      lc(i.id), i.hidden ? 'Y' : '', fmtAt(i.at)
+    ]); 
   });
   
+  // 4. Design 아이디어 덧붙이기 / 댓글 (Comments)
   comments.forEach(c => { 
     const u = um[c.uid] || {}; 
-    const ctype = c.kind === 'idea' ? '아이디어 덧붙이기' : '댓글';
-    rows.push([ctype, c.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', c.ideaId, c.kind || 'comment', '', '', c.body || '', lc(c.id), c.hidden ? 'Y' : '', fmtAt(c.at)]); 
+    const subType = c.kind === 'idea' ? '아이디어 덧붙이기' : '댓글';
+    rows.push([
+      'Design 아이디어', subType, c.uid, u.name || '익명', u.company || '', u.tenure || '', u.entry || '', 
+      c.ideaId, c.kind || 'comment', '', '', 
+      '', '', '', c.body || '', 
+      lc(c.id), c.hidden ? 'Y' : '', fmtAt(c.at)
+    ]); 
   });
 
   return csvText(rows);
 }
-function renderAdmin(app) {
+  function renderAdmin(app) {
   if (!adminOK) {
     app.innerHTML = `<div class="step"><button class="back" id="back" type="button">메인으로</button>
       <h1 style="margin-top:14px">관리자 접근</h1>
