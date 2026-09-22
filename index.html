@@ -229,15 +229,17 @@ header.top .in { max-width: var(--w); margin: 0 auto; padding: 12px 20px; displa
   margin-top: 14px;
 }
 .ai-card .ai-top {
-  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  display: flex; justify-content: space-between; align-items: center; gap: 6px 8px; flex-wrap: wrap; /* ★ 화면 폭 좁을 때 스마트 2단 줄바꿈 */
 }
 .ai-card .ai-badge {
   display: inline-flex; align-items: center; gap: 4px;
   background: #EB5A47; color: #fff; font-size: .78rem; font-weight: 800;
   padding: 3px 10px; border-radius: 999px;
+  white-space: nowrap; flex-shrink: 0; /* ★ 뱃지 단어 쪼개짐 차단 */
 }
 .ai-card .ai-meta {
   font-size: .76rem; color: var(--ink-3); font-weight: 600;
+  white-space: nowrap; /* ★ 우측 문구 단어 쪼개짐 완벽 차단 */
 }
 .ai-card .ai-quote {
   font-size: 0.98rem; font-weight: 700; color: var(--ink);
@@ -265,14 +267,16 @@ header.top .in { max-width: var(--w); margin: 0 auto; padding: 12px 20px; displa
   padding: 20px; margin-top: 16px; box-shadow: var(--shadow);
 }
 .ai-dark-card .ai-top {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: space-between; align-items: center; gap: 6px 8px; flex-wrap: wrap; /* ★ 화면 폭 좁을 때 스마트 2단 줄바꿈 */
 }
 .ai-dark-card .ai-badge {
   background: linear-gradient(90deg, #EB5A47 0%, #D04331 100%); color: #fff;
   font-size: .8rem; font-weight: 800; padding: 4px 12px; border-radius: 999px;
+  white-space: nowrap; flex-shrink: 0; /* ★ 뱃지 단어 쪼개짐 차단 */
 }
 .ai-dark-card .ai-meta {
   font-size: .76rem; color: rgba(255,255,255,.6); font-weight: 600;
+  white-space: nowrap; /* ★ 우측 문구 단어 쪼개짐 완벽 차단 */
 }
 .ai-dark-card .ai-title {
   font-size: 1.1rem; font-weight: 800; margin-top: 12px; line-height: 1.5; letter-spacing: -0.01em;
